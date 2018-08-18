@@ -10,15 +10,15 @@ type msgI interface {
 	// interface methods
 	createMessage() *Msg
 	createID() MsgID
-	author() *ident.Ident  // Identity of the chain's authorized identity
-	signature( active *ident.Ident ) MsgID
+	author() *Ident  // Identity of the chain's authorized identity
+	signature( active *Ident ) MsgID
 	isEmpty() bool
 	previous() *Msg
 }
 
 type Msg struct {
 	mID, prevID, cID MsgID  // Storage indexes of this and related messages
-	auth *ident.Ident // Set to active identity when signatures are set
+	auth *Ident // Set to active identity when signatures are set
 	Serialized []byte // Record as it will be stored
 
 	msgI
@@ -39,8 +39,8 @@ func (this MsgID) isNil() bool {
 	return (*big.Int)(&this).Cmp(&bigZero) == 0
 }
 
-// New( value ) Create a new message from a generalized object.
-func New( v interface{} ) (msg Msg, err error ) {
+// NewMessage( value ) Create a new message from a generalized object.
+func NewMessage( v interface{} ) (msg Msg, err error ) {
 	serialValue, err := xml.Marshal(v)
 	if err == nil {
 		msg.Serialized = serialValue
@@ -87,13 +87,13 @@ func (this *Msg) previous() *Msg {
 }
 
 // Identity of the chain's authorized identity
-func (this *Msg) author() *ident.Ident {
+func (this *Msg) author() *Ident {
 	return this.author()
 }
 
 // Compute message signature for an identity
-func (this *Msg) signature( active *ident.Ident ) MsgID {
-	if this.mID == nil {
+func (this *Msg) signature( active *Ident ) MsgID {
+	if this.mID.isNil() {
 		this.auth = active
 		this.mID = active.sign( this )
 	}

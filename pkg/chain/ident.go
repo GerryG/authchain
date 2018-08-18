@@ -7,7 +7,7 @@ import (
 )
 
 type ident interface {
-	sign() MsgID
+	sign( *Msg ) MsgID
 }
 
 type Ident struct {
