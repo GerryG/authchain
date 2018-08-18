@@ -1,4 +1,9 @@
-package "main"
+package main
 
-int func main(int argc, byte[] argv) {
+import (
+	"fmt"
+)
+
+func main() {
+	fmt.Printf("Hello world!!\n")
 }
