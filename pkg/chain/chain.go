@@ -72,13 +72,10 @@ func New( active *Ident, m *Element ) ( chainRoot *Chain, err error ) {
 		At: time.Now(),
 		App: m,
 	}
-	//fmt.Printf("Marsh[%T]%#v, [%T]%p %s\nmH:%#v\n", m, m, mHead.App, mHead.App, mHead.Author, mHead)
 	chainRoot.Serialized, err = xml.Marshal(&mHead)
-	//fmt.Printf("SS[%T] %s\n", m, chainRoot.Serialized)
 	if err == nil {
 		chainRoot.cID = active.Sign( chainRoot.Serialized )
 		chainRoot.eID = chainRoot.cID
-	//	fmt.Printf("Signed:%s\n", (*big.Int)(&chainRoot.eID).Text(56) )
 	} else {
 		fmt.Printf("Error marshalling: %s\n", err)
 	}
@@ -120,8 +117,6 @@ func (this *Chain) chainZeroID() ChainID {
 
 // return true when the chain is empty (Chain is a chain header message)
 func (this *Chain) IsEmpty() bool {
-	//this.createID()
-	//fmt.Printf("IsE:c %s\nIsE:e %s\n", (*big.Int)(&this.eID).Text(56), (*big.Int)(&this.cID).Text(56) )
 	return (* big.Int)(&this.cID).Cmp((* big.Int)(&this.eID)) == 0
 }
 
@@ -157,15 +152,8 @@ func Get( eID ChainID ) (c *Chain) {
 func (this *Chain) AddEntry( m *Element ) (chain *Chain, err error) {
 	chain = new(Chain)
 
-	//el, ok := m.(*Element)
-	//if ok { // us matching serializer
 	fmt.Printf("AddEntry: %T\n", m)
 	chain.Serialized, err = Marshal("entry", m)
-		//fmt.Printf("SS1:%s\n", chainRoot.Serialized)
-	//} else { // this version should be Parsed according the xml structs and tags
-		//chain.Serialized, err = xml.Marshal(m)
-		//fmt.Printf("SS2:%s\n", chainRoot.Serialized)
-	//}
 	if err == nil {
 		chain.author = this.author
 		chain.cID = this.cID

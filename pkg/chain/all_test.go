@@ -20,11 +20,10 @@ type testInst struct {
 func testdataInputFrom( t *testing.T, base, tn string, exts ...string ) (in io.Reader, ext string) {
 	var err error
 	tn = base + "_" + tn
-	//fmt.Printf("Ifrom; %s, %v\n", tn, exts)
 	for _, ext = range exts {
 		in, err = os.Open( tn+ext )
 		if err == nil {
-			fmt.Printf("found: %s\n", tn+ext)
+			//fmt.Printf("found: %s\n", tn+ext)
 			return
 		}
 	}
@@ -32,7 +31,7 @@ func testdataInputFrom( t *testing.T, base, tn string, exts ...string ) (in io.R
 	for _, ext = range exts {
 		in, err = os.Open( base+ext )
 		if err == nil {
-			fmt.Printf("found base: %s\n", base+ext)
+			//fmt.Printf("found base: %s\n", base+ext)
 			return
 		}
 	}
@@ -57,9 +56,8 @@ func testdataCreate( t *testing.T, tn string ) (doc *Element) {
 		// read and decode XML file
 		doc := &Element{}
 		err := Unmarshal("app", in, doc)
-		//fmt.Printf("testCr %T, %T, %#v\n", doc, in, doc )
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Unmarshal error: %s", err))
 		}
 		return doc
 	}

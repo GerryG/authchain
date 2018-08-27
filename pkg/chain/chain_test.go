@@ -44,7 +44,6 @@ func TestNewChainVerify( t *testing.T ) {
 	if createMessage == nil {
 		panic("No message from testdataCreate\n")
 	}
-	//fmt.Printf("CM[%T], %#v\n", createMessage, createMessage)
 
 	var cRoot *Chain
 	var err error
@@ -64,9 +63,7 @@ func TestNewChainVerify( t *testing.T ) {
 	})
 	var head ChainHeader
 	t.Run("CheckMarshalling", func(t *testing.T) {
-		//err = xml.Unmarshal(cRoot.Serialized, &head)
 		err := Unmarshal("header", bytes.NewBuffer(cRoot.Serialized), xml.Unmarshaler(&head))
-		//fmt.Printf("ch serialized:%s\nOut:%#v\n", string(cRoot.Serialized), head)
 		if err != nil {
 			t.Errorf("Error from Unmarshal: %s\n", err)
 		}

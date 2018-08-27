@@ -77,7 +77,6 @@ func LoadIdent( istore interface{}, ext string ) (id *Ident) {
 	}
 	var loadid Ident
 	err = xml.Unmarshal(data, &loadid)
-	//fmt.Printf("Ident: %#v\n", loadid)
 	if err != nil {
 		panic(err)
 	}
