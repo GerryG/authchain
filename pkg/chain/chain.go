@@ -7,7 +7,8 @@
 package chain
 
 import (
-	//"fmt"
+	"fmt"
+	"time"
 	"errors"
 	"math/big"
 	"encoding/xml"
@@ -25,8 +26,28 @@ type Chain struct {
 	eID, prevID, cID ChainID  // Storage indexes of this and related messages
 	author *Ident // Set to active identity when signatures are set
 	Serialized []byte // Record as it will be stored
+	at time.Time
 
 	chainI
+}
+
+// xml for the chain header message
+type ChainHeader struct {
+	XMLName xml.Name `xml:"header"`
+	Author string    `xml:"author"`
+	At time.Time     `xml:"at"`
+	App *Element     `xml:"app"`
+
+	chainI
+	xml.Unmarshaler
+}
+
+// xml for the chain entry message
+type ChainEntry struct {
+	XMLName xml.Name `xml:"entry"`
+	Actions []*Element
+	xml.Marshaler
+	xml.Unmarshaler
 }
 
 var bigZero big.Int // so we don't need to new this for IsNil each time
@@ -39,28 +60,27 @@ type ChainID big.Int
 // will specify what this chain is about, etc. Returns a chain object with no entries.
 // Compute message signature for an identity
 //func (this *Chain) signature( active *Ident ) ChainID {
-func New( active *Ident, m interface{} ) ( chainRoot *Chain, err error ) {
+func New( active *Ident, m *Element ) ( chainRoot *Chain, err error ) {
 	if m == nil {
 		return nil, errors.New("No Create Message to New\n")
 	}
 	chainRoot = new(Chain)
+	chainRoot.author = active
 
-	// This (*Element) is what our generalized xml parser return, so ...
-	el, ok := m.(*Element)
-	if ok { // us matching serializer
-		chainRoot.Serialized, err = Marshal(el)
-		//fmt.Printf("SS1:%s\n", chainRoot.Serialized)
-	} else { // this version should be Parsed according the xml structs and tags
-		chainRoot.Serialized, err = xml.Marshal(m)
-		//fmt.Printf("SS2:%s\n", chainRoot.Serialized)
+	mHead := ChainHeader{
+		Author: active.Domain()+":"+active.Id(),
+		At: time.Now(),
+		App: m,
 	}
+	//fmt.Printf("Marsh[%T]%#v, [%T]%p %s\nmH:%#v\n", m, m, mHead.App, mHead.App, mHead.Author, mHead)
+	chainRoot.Serialized, err = xml.Marshal(&mHead)
+	//fmt.Printf("SS[%T] %s\n", m, chainRoot.Serialized)
 	if err == nil {
-		chainRoot.author = active
 		chainRoot.cID = active.Sign( chainRoot.Serialized )
 		chainRoot.eID = chainRoot.cID
 	//	fmt.Printf("Signed:%s\n", (*big.Int)(&chainRoot.eID).Text(56) )
-	//} else {
-	//	fmt.Printf("Error marshalling: %s\n", err)
+	} else {
+		fmt.Printf("Error marshalling: %s\n", err)
 	}
 	return
 }
@@ -92,7 +112,7 @@ func (this *Chain) chainZeroID() ChainID {
 		if this.IsEmpty() {
 			this.cID = this.eID
 		} else {
-			this.cID = this.previous().chainZeroID()
+			this.cID = this.Previous().chainZeroID()
 		}
 	}
 	return this.cID
@@ -106,7 +126,7 @@ func (this *Chain) IsEmpty() bool {
 }
 
 // Get the previous entry in the chain
-func (this *Chain) previous() *Chain {
+func (this *Chain) Previous() *Chain {
 	prev, err := this.prevID.loadMessage()
 	if err == nil {
 		return prev
@@ -134,14 +154,24 @@ func Get( eID ChainID ) (c *Chain) {
 
 // addEntry( Chain ) Add message to the chain and returns the resulting chain.
 // returns nil when there was a problem (when correctly configured, shouldn't happen)
-func (this *Chain) addEntry( m interface{} ) (c *Chain, err error) {
-	c = new(Chain)
-	c.cID = this.cID
-	c.Serialized, err = xml.Marshal(m)
+func (this *Chain) AddEntry( m *Element ) (chain *Chain, err error) {
+	chain = new(Chain)
+
+	//el, ok := m.(*Element)
+	//if ok { // us matching serializer
+	fmt.Printf("AddEntry: %T\n", m)
+	chain.Serialized, err = Marshal("entry", m)
+		//fmt.Printf("SS1:%s\n", chainRoot.Serialized)
+	//} else { // this version should be Parsed according the xml structs and tags
+		//chain.Serialized, err = xml.Marshal(m)
+		//fmt.Printf("SS2:%s\n", chainRoot.Serialized)
+	//}
 	if err == nil {
-		c.prevID = this.eID
-		c.author = this.author
-		c.eID = c.author.Sign( c.Serialized )
+		chain.author = this.author
+		chain.cID = this.cID
+		chain.prevID = this.eID
+		chain.author = this.author
+		chain.eID = chain.author.Sign( chain.Serialized )
 	}
 	return
 }

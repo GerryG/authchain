@@ -1,0 +1,13 @@
+<app name="Chess" dna="file:///testdata/chess.xml">
+  <player role="black" id="PublicIdentifier">
+    <name>Testy McTesterson</name>
+    <nick>Testy</nick>
+    <chain>*</chain>
+  </player>
+  <player role="white" id="OppPublicIdentifier">
+    <name>Westy McTesterson</name>
+    <nick>Westy</nick>
+    <chain>chain ID of White's Chain</chain>
+  </player>
+</app>
+

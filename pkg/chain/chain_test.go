@@ -2,6 +2,8 @@
 package chain_test
 
 import ( 
+	//"fmt"
+	"bytes"
 	. "github.com/GerryG/authchain/pkg/chain"
 	"testing"
 	"math/big"
@@ -36,11 +38,13 @@ func TestNewChainVerify( t *testing.T ) {
 	if aID == nil {
 		return
 	}
+	// this load is using *Element method UnmarshalXML to decode the file input
 	createMessage := testdataCreate(t, tname)
 
 	if createMessage == nil {
 		panic("No message from testdataCreate\n")
 	}
+	//fmt.Printf("CM[%T], %#v\n", createMessage, createMessage)
 
 	var cRoot *Chain
 	var err error
@@ -58,21 +62,22 @@ func TestNewChainVerify( t *testing.T ) {
 			t.Errorf( "New chain should be empty\n" )
 		}
 	})
-	var ser_again []byte
+	var head ChainHeader
 	t.Run("CheckMarshalling", func(t *testing.T) {
-		var head ChainHeader
-		err = xml.Unmarshal(cRoot.Serialized, &head)
+		//err = xml.Unmarshal(cRoot.Serialized, &head)
+		err := Unmarshal("header", bytes.NewBuffer(cRoot.Serialized), xml.Unmarshaler(&head))
+		//fmt.Printf("ch serialized:%s\nOut:%#v\n", string(cRoot.Serialized), head)
 		if err != nil {
-			panic(err)
-		}
-		ser_again, err = xml.Marshal(head)
-		if err != nil {
-			panic(err)
+			t.Errorf("Error from Unmarshal: %s\n", err)
 		}
 	})
 	t.Run("CheckRemarshal", func(t *testing.T) {
-		if string(ser_again) != string(cRoot.Serialized) {
-			t.Errorf("Differ:\nA:%s\nB:%s\n", ser_again, cRoot.Serialized )
+		serAgain, err := xml.Marshal(head)
+		if err != nil {
+			t.Errorf("Error from (re)Marshal: %s\n", err)
+		}
+		if string(serAgain) != string(cRoot.Serialized) {
+			t.Errorf("Differ:\nAgain:%s\nB orig:%s\n", serAgain, cRoot.Serialized )
 		}
 	})
 	t.Run("VerifyID", func(t *testing.T) {
@@ -99,7 +104,7 @@ func TestIsEmpty( t *testing.T ) {
 }
 
 // Get the previous entry in the chain
-//func (this *Chain) previous() *Chain {
+//func (this *Chain) Previous() *Chain {
 func TestPrevious( t *testing.T ) {
 }
 

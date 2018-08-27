@@ -2,6 +2,7 @@
 package chain
 
 import (
+	//"fmt"
 	"os"
 	"math/big"
 	"crypto"
@@ -16,16 +17,27 @@ type idInterface interface {
 	Store() error
 	VerifyID( *ChainID, []byte ) error
 	PublicKey() *rsa.PublicKey
+	Id() string
+	Domain() string
 }
 
+// for identity file
 type Ident struct {
-	Name string
-	secDev *SecureServer
+	XMLName xml.Name `xml:"identity"`
+	Name	string   `xml:"name"`
+	Certificate Certificate
+	Secure	SecureServer `xml:"secure"`
 
 	idInterface
 }
 
 
+func (this *Ident) Id() string {
+	return this.Secure.Id
+}
+func (this *Ident) Domain() string {
+	return this.Secure.Domain
+}
 /*
 func NewIdent( sDev *SecureServer, user interface{} ) (id *Ident) {
 	return nil
@@ -63,26 +75,25 @@ func LoadIdent( istore interface{}, ext string ) (id *Ident) {
 	if err != nil {
 		panic(err)
 	}
-	var loadid Identity
+	var loadid Ident
 	err = xml.Unmarshal(data, &loadid)
+	//fmt.Printf("Ident: %#v\n", loadid)
 	if err != nil {
 		panic(err)
 	}
 
-	id = &Ident{Name: loadid.Name}
-	id.secDev = NewSecure( &loadid )
-	return
+	return &loadid
 }
 
 func (this *Ident) PublicKey() *rsa.PublicKey {
-	pk, ok := this.secDev.Cert.PublicKey.(*rsa.PublicKey)
+	pk, ok := this.Secure.Cert.PublicKey.(*rsa.PublicKey)
 	if ok { return pk }
 	return nil
 }
 
 // Use secureDevice to compute signature using key associated with this
 func (this *Ident) Sign( message []byte ) (mID ChainID) {
-	return this.secDev.sign( message )
+	return this.Secure.sign( message )
 }
 
 func (this *Ident) VerifyID( id *ChainID, message []byte ) error {

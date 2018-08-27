@@ -3,6 +3,7 @@ package chain_test
 
 import (
 	"os"
+	"io"
 	"fmt"
 	"io/ioutil"
 	"encoding/xml"
@@ -16,7 +17,7 @@ type testInst struct {
 	Name string
 }
 
-func testdataInputFrom( t *testing.T, base, tn string, exts ...string ) (in *os.File, ext string) {
+func testdataInputFrom( t *testing.T, base, tn string, exts ...string ) (in io.Reader, ext string) {
 	var err error
 	tn = base + "_" + tn
 	//fmt.Printf("Ifrom; %s, %v\n", tn, exts)
@@ -44,25 +45,19 @@ func testdataIdent( t *testing.T, tn string ) (id *Ident) {
 	testBase := filepath.Join("testdata", "ident")
 	in, ext := testdataInputFrom( t, testBase, tn, "", ".xml", ".json", ".crt" )
 	id = LoadIdent( in, ext)
+	id.Secure.Unlock(id.Certificate.PEM)
 	return
 }
 
-func testdataCreate( t *testing.T, tn string ) interface{} {
+func testdataCreate( t *testing.T, tn string ) (doc *Element) {
 	testBase := filepath.Join("testdata", "create")
 	in, ext := testdataInputFrom( t, testBase, tn, "", ".xml", ".json" )
-	defer in.Close()
+	defer in.(*os.File).Close()
 	if ext == ".xml" {
 		// read and decode XML file
-		doc, err := Unmarshal(*in)
-		/*data, err := ioutil.ReadAll(in)
-		if err != nil {
-			panic(err)
-		}
-		//fmt.Printf("Read create[%s] %s\n", testBase+ext, data)
-		//var head ChainHeader
-		var head *interface{}
-		err = xml.Unmarshal(data, head)
-		*/
+		doc := &Element{}
+		err := Unmarshal("app", in, doc)
+		//fmt.Printf("testCr %T, %T, %#v\n", doc, in, doc )
 		if err != nil {
 			panic(err)
 		}
