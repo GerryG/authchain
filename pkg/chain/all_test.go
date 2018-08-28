@@ -5,8 +5,8 @@ import (
 	"os"
 	"io"
 	"fmt"
-	"io/ioutil"
-	"encoding/xml"
+	//"io/ioutil"
+	//"encoding/xml"
 	"testing"
 	"path/filepath"
 	. "github.com/GerryG/authchain/pkg/chain"
@@ -64,21 +64,18 @@ func testdataCreate( t *testing.T, tn string ) (doc *Element) {
 	return nil
 }
 
-func testdataMessage( t *testing.T, tn string ) interface{} {
+func testdataMessage( t *testing.T, tn string ) *Element {
 	testBase := filepath.Join("testdata", "message")
 	in, ext := testdataInputFrom( t, testBase, tn, "", ".xml", ".json", ".crt" )
 	if ext == ".xml" {
 		// read and decode XML file
-		data, err := ioutil.ReadAll(in)
+		entry := &Element{}
+		err := Unmarshal("entry", in, entry)
 		if err != nil {
 			panic(err)
 		}
-		var head ChainEntry
-		err = xml.Unmarshal(data, &head)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Message in:%+v\n", &head)
+		fmt.Printf("Message in:%+v\n", entry)
+		return entry
 	}
 	return nil
 }

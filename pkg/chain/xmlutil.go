@@ -34,6 +34,7 @@ func Marshal(tag string, e interface{}) (b []byte, err error) {
 }
 
 func (this *Element) MarshalXML(enc *xml.Encoder, st xml.StartElement) (err error) {
+	fmt.Printf("MaXML(%T) %#v\n", this, st)
 	err = this.Encode( enc )
 	if err != nil { return }
 	err = enc.Flush()
@@ -61,8 +62,14 @@ var nonWhite *regexp.Regexp = regexp.MustCompile(`[^\s\p{Zs}]`)
 func Unmarshal(tag string, in io.Reader, el xml.Unmarshaler) error {
 	decoder := xml.NewDecoder(in)
 	tg := xml.StartElement{Name:xml.Name{Local: tag}}
+	fmt.Printf("UnMarsh[%T] %#v\n", el, el)
 	ret := el.UnmarshalXML(decoder, tg)
 	return ret
+}
+
+func (this *Element) GetAppName() string {
+	fmt.Printf("GetAppName: %#v\n", this)
+	return ""
 }
 
 func FindAttr(aname string, ats []xml.Attr) string {
@@ -71,12 +78,23 @@ func FindAttr(aname string, ats []xml.Attr) string {
 	}
 	return ""
 }
+
 func CharData(children []Element) (cd string) {
 	for _, el := range children {
 		s, ok := el.Tok.(xml.CharData)
 		if ok { cd = cd+string([]byte(s)) }
 	}
 	return
+}
+
+func (this *ChainEntry) UnmarshalXML(decoder *xml.Decoder, st xml.StartElement) error {
+	el := &Element{Tok:st}
+	err := el.UnmarshalXML(decoder, st)
+	if err != nil {
+		return err
+	}
+	this.Entry = &Element{Tok:el.Tok, Children:el.Children}
+	return nil
 }
 
 func (this *ChainHeader) UnmarshalXML(decoder *xml.Decoder, st xml.StartElement) error {
@@ -133,6 +151,7 @@ func (this *Element) UnmarshalXML(decoder *xml.Decoder, st xml.StartElement) err
 			case xml.CharData:
 				if nonWhite.Find(v) != nil {
 					top.Children = append(top.Children, Element{Tok:xml.CopyToken(v)})
+				}
 			}
 		} else {
 			if err == io.EOF {

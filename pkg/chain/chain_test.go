@@ -2,7 +2,7 @@
 package chain_test
 
 import ( 
-	//"fmt"
+	"fmt"
 	"bytes"
 	. "github.com/GerryG/authchain/pkg/chain"
 	"testing"
@@ -84,6 +84,71 @@ func TestNewChainVerify( t *testing.T ) {
 	})
 }
 
+// addEntry( Chain ) Add message to the chain and returns the resulting chain.
+//func (this *Chain) AddEntry( m *Element ) (chain *Chain, err error) {
+func TestAddEntry( t *testing.T ) {
+	tname := "addentry"
+	aID := testdataIdent(t, tname)
+	if aID == nil {
+		return
+	}
+	// this load is using *Element method UnmarshalXML to decode the file input
+	createMessage := testdataCreate(t, tname)
+
+	if createMessage == nil {
+		panic("No message from testdataCreate\n")
+	}
+
+	// New (setup here)
+	cRoot, err := New( aID, createMessage )
+	if err != nil {
+		t.Errorf( "Unexpected error from New: %s\n", err )
+	}
+	if cRoot == nil {
+		t.Errorf( "No chain object returned\n" )
+	}
+	if !cRoot.IsEmpty() {
+		t.Errorf( "New chain should be empty\n" )
+	}
+
+	var newEnt *Chain
+	newMessage := testdataMessage(t, tname)
+	t.Run("AddNew", func(t *testing.T) {
+		newEnt, err = cRoot.AddEntry(newMessage)
+		if err == nil {
+		} else {
+			fmt.Printf("Error from AddEntry: %s\n", err)
+		}
+	})
+	t.Run("NotEmpty", func(t *testing.T) {
+		if newEnt.IsEmpty() {
+			t.Errorf( "Chain should not be empty after adding entry\n" )
+		}
+	})
+	var entry ChainEntry
+	t.Run("CheckMarshalling", func(t *testing.T) {
+		err := Unmarshal("entry", bytes.NewBuffer(newEnt.Serialized), xml.Unmarshaler(&entry))
+		if err != nil {
+			t.Errorf("Error from Unmarshal: %s\n", err)
+		}
+	})
+	t.Run("CheckRemarshal", func(t *testing.T) {
+		fmt.Printf("Ch Re: %#v\n", entry)
+		serAgain, err := xml.Marshal(entry.Entry)
+		if err != nil {
+			t.Errorf("Error from (re)Marshal: %s\n", err)
+		}
+		if string(serAgain) != string(newEnt.Serialized) {
+			t.Errorf("Differ:\nAgain:%s\nB orig:%s\n", serAgain, newEnt.Serialized )
+		}
+	})
+	t.Run("VerifyID", func(t *testing.T) {
+		if !newEnt.CheckID() {
+			t.Error("Signature does not match\n")
+		}
+	})
+}
+
 // load the header record from its ID
 //func (this *Chain) getCreate() *Chain {
 func TestGetCreate( t *testing.T ) {
@@ -93,11 +158,6 @@ func TestGetCreate( t *testing.T ) {
 // if it isn't already set on the object. (Or maybe store header ID in each entry?)
 //func (this *Chain) createID() ChainID {
 func TestCreateID( t *testing.T ) {
-}
-
-// return true when the chain is empty (Chain is a chain header message)
-//func (this *Chain) isEmpty() bool {
-func TestIsEmpty( t *testing.T ) {
 }
 
 // Get the previous entry in the chain
@@ -120,11 +180,6 @@ func TestGet( t *testing.T ) {
 // getChainID: Returns ID of the zero entry (header/creation message) of the chain.
 //func (this *Chain) getChainID() (id ChainID) {
 func TestGetChainID( t *testing.T ) {
-}
-
-// addEntry( Chain ) Add message to the chain and returns the resulting chain.
-//func (this *Chain) addEntry( m *Chain ) (c *Chain) {
-func TestAddEntry( t *testing.T ) {
 }
 
 
