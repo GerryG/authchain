@@ -34,7 +34,6 @@ func Marshal(tag string, e interface{}) (b []byte, err error) {
 }
 
 func (this *Element) MarshalXML(enc *xml.Encoder, st xml.StartElement) (err error) {
-	fmt.Printf("MaXML(%T) %#v\n", this, st)
 	err = this.Encode( enc )
 	if err != nil { return }
 	err = enc.Flush()
@@ -62,14 +61,8 @@ var nonWhite *regexp.Regexp = regexp.MustCompile(`[^\s\p{Zs}]`)
 func Unmarshal(tag string, in io.Reader, el xml.Unmarshaler) error {
 	decoder := xml.NewDecoder(in)
 	tg := xml.StartElement{Name:xml.Name{Local: tag}}
-	fmt.Printf("UnMarsh[%T] %#v\n", el, el)
 	ret := el.UnmarshalXML(decoder, tg)
 	return ret
-}
-
-func (this *Element) GetAppName() string {
-	fmt.Printf("GetAppName: %#v\n", this)
-	return ""
 }
 
 func FindAttr(aname string, ats []xml.Attr) string {

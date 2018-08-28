@@ -74,7 +74,6 @@ func testdataMessage( t *testing.T, tn string ) *Element {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("Message in:%+v\n", entry)
 		return entry
 	}
 	return nil

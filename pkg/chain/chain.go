@@ -26,7 +26,6 @@ type Chain struct {
 	eID, prevID, cID ChainID  // Storage indexes of this and related messages
 	author *Ident // Set to active identity when signatures are set
 	Serialized []byte // Record as it will be stored
-	AppName string
 	at time.Time
 
 	chainI
@@ -45,7 +44,6 @@ type ChainHeader struct {
 // xml for the chain entry message
 type ChainEntry struct {
 	XMLName xml.Name `xml:"entry"`
-	//AppName string   `xml:"app,attr"`
 	Entry *Element
 
 	xml.Unmarshaler
@@ -67,7 +65,6 @@ func New( active *Ident, m *Element ) ( chainRoot *Chain, err error ) {
 	}
 	chainRoot = new(Chain)
 	chainRoot.author = active
-	chainRoot.AppName = m.GetAppName()
 
 	mHead := ChainHeader{
 		Author: active.Domain()+":"+active.Id(),
@@ -155,15 +152,13 @@ func (this *Chain) AddEntry( m *Element ) (chain *Chain, err error) {
 	chain = new(Chain)
 
 	chain.Serialized, err = Marshal("entry", m)
-	fmt.Printf("AddEntry: %T ser: %s\n", m, chain.Serialized)
 	if err == nil {
 		chain.author = this.author
 		chain.cID = this.cID
 		chain.prevID = this.eID
 		chain.author = this.author
-		chain.AppName = this.AppName
 		chain.eID = chain.author.Sign( chain.Serialized )
-		fmt.Printf("AddE:%s\nNewI:%s\n", (*big.Int)(&chain.cID).Text(62), (*big.Int)(&chain.eID).Text(62))
+		//fmt.Printf("AddE:%s\nNewI:%s\n", (*big.Int)(&chain.cID).Text(62), (*big.Int)(&chain.eID).Text(62))
 	} else {
 		fmt.Printf("Error from marshal: %s\n", err)
 	}

@@ -133,7 +133,6 @@ func TestAddEntry( t *testing.T ) {
 		}
 	})
 	t.Run("CheckRemarshal", func(t *testing.T) {
-		fmt.Printf("Ch Re: %#v\n", entry)
 		serAgain, err := xml.Marshal(entry.Entry)
 		if err != nil {
 			t.Errorf("Error from (re)Marshal: %s\n", err)
